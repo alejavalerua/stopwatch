@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch</title>
+    <link rel="icon" href="icon.png" type="image/x-icon"> <!-- Agrega el favicon -->
+    <link rel="shortcut icon" href="icon.png" type="image/x-icon"> <!-- Agrega el favicon -->
+    <style>
+        /*Estilos de la página*/
+        body {
+          font-family: Arial, sans-serif;
+          text-align: center;
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+        }
+    
+        h1 {
+          color: #333;
+          font-size: 3rem;
+          margin-bottom: 10px;
+        }
+    
+        #timer {
+          font-size: 4rem;
+          margin: 20px;
+          color: #333;
+        }
+
+        #laps {
+          font-size: 2rem;
+          margin-bottom: 20px;
+          color: #666;
+          text-align: left;
+        }
+        
+        #lapsContainer {
+          width: 100%;
+          max-height: 200px;
+          overflow: auto;
+          font-size: 2rem;
+          margin-bottom: 20px;
+          color: #666;
+          text-align: left;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .button-container {
+          display: flex;
+          gap: 10px;
+          margin-top: 20px;
+        }
+
+        .button {
+          background-color: #007bff;
+          color: #fff;
+          padding: 8px 16px;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          font-size: 1rem; 
+        }
+
+        #startStop {
+          background-color: #28a745;
+        }
+    
+        #lap {
+          background-color: #ffc107;
+        }
+    
+        #reset {
+          background-color: #dc3545;
+        }
+    
+        a {
+          display: inline-block;
+          background-color: #333;
+          color: #fff;
+          padding: 15px 25px;
+          border-radius: 5px;
+          text-decoration: none;
+          margin: 20px;
+          font-size: 1.2rem;
+        }
+    
+        a:hover {
+          background-color: #555;
+        }
+      </style>
+</head>
+<body>
+    <h1>Cronómetro</h1>
+    <div id="timer">00:00:00</div>
+    <div id="lapsContainer"> <!-- Contenedor para mostrar los laps con scroll -->
+      <div id="laps"></div> <!-- Espacio para mostrar los laps -->
+    </div>
+    <div class="button-container">
+      <button class="button" id="startStop">Iniciar</button>
+      <button class="button" id="lap">Lap</button>
+      <button class="button" id="reset">Resetear</button>
+      <a class="button" id="export" download="laps.csv">Exportar</a>
+    </div>
+  
+    <script>
+      // Variables para controlar el cronómetro y laps
+      let startTime;
+      let interval;
+      let laps = [];
+      let isRunning = false;
+  
+      // Elementos del DOM
+      const timerDisplay = document.getElementById('timer');
+      const startStopButton = document.getElementById('startStop');
+      const lapButton = document.getElementById('lap');
+      const resetButton = document.getElementById('reset');
+      const exportLink = document.getElementById('export');
+  
+      // Función para formatear el tiempo en formato HH:MM:SS
+      function formatTime(ms) {
+        const date = new Date(ms);
+        return date.toISOString().substr(11, 8);
+      }
+  
+      // Función para actualizar el cronómetro
+      function updateTimer() {
+        const now = Date.now();
+        const elapsed = now - startTime;
+        timerDisplay.textContent = formatTime(elapsed);
+      }
+  
+      // Evento para el botón "Iniciar/Parar"
+      startStopButton.addEventListener('click', () => {
+        if (!isRunning) {
+          startTime = Date.now() - (laps.length > 0 ? laps[laps.length - 1].time : 0);
+          interval = setInterval(updateTimer, 1000);
+          startStopButton.textContent = 'Parar';
+          isRunning = true;
+        } else {
+          clearInterval(interval);
+          startStopButton.textContent = 'Iniciar';
+          isRunning = false;
+        }
+      });
+  
+      // Evento para el botón "Lap"
+      lapButton.addEventListener('click', () => {
+        if (isRunning) {
+          laps.push({ time: Date.now() - startTime });
+          updateLaps(); // Llama a la función para actualizar los laps en pantalla
+        }
+      });
+  
+      // Evento para el botón "Resetear"
+      resetButton.addEventListener('click', () => {
+        clearInterval(interval);
+        timerDisplay.textContent = '00:00:00';
+        laps = [];
+        updateLaps(); // Llama a la función para actualizar los laps en pantalla
+        startStopButton.textContent = 'Iniciar';
+        isRunning = false;
+      });
+  
+      // Elemento del DOM para mostrar los laps en pantalla
+      const lapsDisplay = document.getElementById('laps');
+  
+      function updateLaps() {
+        lapsDisplay.innerHTML = laps.map((lap, index) => `<p>Lap ${index + 1}: ${formatTime(lap.time)}</p>`).join('');
+      }
+  
+      // Función para actualizar los laps en pantalla
+      function updateLaps() {
+        lapsDisplay.innerHTML = laps.map((lap, index) => `<p>Lap ${index + 1}: ${formatTime(lap.time)}</p>`).join('');
+      }
+      
+      // Evento para el botón "Exportar"
+      exportLink.addEventListener('click', () => {
+        const csvContent = "Tiempo (HH:MM:SS),Tiempo en Segundos\n" +
+          laps.map(lap => `${formatTime(lap.time)},${lap.time / 1000}`).join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        exportLink.href = url;
+        exportLink.download = 'laps.csv';
+      });
+    </script>
+  </body>
+</html>
